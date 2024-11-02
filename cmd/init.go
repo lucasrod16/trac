@@ -18,8 +18,9 @@ func NewInitCmd() *cobra.Command {
 	opts := &initOptions{}
 
 	return &cobra.Command{
-		Use:   "init",
-		Short: "Initialize a new repository",
+		Use:   "init [repoPath]",
+		Short: "Initialize a new trac repository",
+		Long:  "Initialize a new trac repository at the specified path. If no path is provided, the current working directory will be used.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 0 {
