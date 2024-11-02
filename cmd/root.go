@@ -7,14 +7,14 @@ import (
 )
 
 func NewRootCmd() *cobra.Command {
-	return &cobra.Command{
+	rootCmd := &cobra.Command{
 		Use:   "trac",
 		Short: "A barebones version control system",
 	}
+	rootCmd.AddCommand(NewInitCmd())
+	return rootCmd
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	rootCmd := NewRootCmd()
 	err := rootCmd.Execute()
