@@ -12,6 +12,7 @@ func NewRootCmd() *cobra.Command {
 		Short: "A barebones version control system",
 	}
 	rootCmd.AddCommand(NewInitCmd())
+	rootCmd.AddCommand(NewStatusCmd())
 	return rootCmd
 }
 

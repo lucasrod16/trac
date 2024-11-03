@@ -10,15 +10,15 @@ import (
 )
 
 func TestInitCommand(t *testing.T) {
-	tmpDir := t.TempDir()
-	repoPath := filepath.Join(tmpDir, ".trac")
+	tmpdir := t.TempDir()
+	repoPath := filepath.Join(tmpdir, ".trac")
 
 	cmd := NewInitCmd()
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
 	cmd.SetErr(&buf)
 
-	cmd.SetArgs([]string{tmpDir})
+	cmd.SetArgs([]string{tmpdir})
 	require.NoError(t, cmd.Execute())
 
 	expectedDirs := []string{
