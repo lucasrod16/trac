@@ -25,3 +25,5 @@ go.work.sum
 .env
 
 .trac
+bin
+notes.md
