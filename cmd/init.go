@@ -32,13 +32,13 @@ func NewInitCmd() *cobra.Command {
 				}
 				opts.repoPath = cwd
 			}
-			return initRepo(cmd.OutOrStdout(), opts)
+			return initRepo(cmd.OutOrStdout(), opts.repoPath)
 		},
 	}
 }
 
-func initRepo(w io.Writer, opts *initOptions) error {
-	absTracPath, err := filepath.Abs(filepath.Join(opts.repoPath, ".trac"))
+func initRepo(w io.Writer, repoPath string) error {
+	absTracPath, err := filepath.Abs(filepath.Join(repoPath, ".trac"))
 	if err != nil {
 		return err
 	}
