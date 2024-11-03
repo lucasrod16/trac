@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -27,22 +26,15 @@ func TestInitCommand(t *testing.T) {
 		filepath.Join(repoPath, "refs", "heads"),
 	}
 	for _, dir := range expectedDirs {
-		_, err := os.Stat(dir)
-		require.NoError(t, err, "Expected directory %s to exist, but it does not.", dir)
+		require.DirExists(t, dir)
 	}
 
-	headPath := filepath.Join(repoPath, "HEAD")
-	_, err := os.Stat(headPath)
-	require.NoError(t, err, "Expected HEAD file to exist, but it does not.")
-
-	mainBranchPath := filepath.Join(repoPath, "refs", "heads", "main")
-	_, err = os.Stat(mainBranchPath)
-	require.NoError(t, err, "Expected main branch reference file %s to exist, but it does not.", mainBranchPath)
-
-	require.Equal(t, fmt.Sprintf("Initialized empty trac repository in %s\n", repoPath), buf.String(), "Expected initialization message not found")
+	require.FileExists(t, filepath.Join(repoPath, "HEAD"))
+	require.FileExists(t, filepath.Join(repoPath, "refs", "heads", "main"))
+	require.Equal(t, fmt.Sprintf("Initialized empty trac repository in %s\n", repoPath), buf.String())
 
 	// verify re-init
 	buf.Reset()
 	require.NoError(t, cmd.Execute())
-	require.Equal(t, fmt.Sprintf("Reinitialized existing trac repository in %s\n", repoPath), buf.String(), "Expected reiinitialization message not found")
+	require.Equal(t, fmt.Sprintf("Reinitialized existing trac repository in %s\n", repoPath), buf.String())
 }
