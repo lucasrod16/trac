@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
+	"github.com/lucasrod16/trac/internal/layout"
 	"github.com/spf13/cobra"
 )
 
@@ -32,46 +32,27 @@ func NewInitCmd() *cobra.Command {
 				}
 				opts.repoPath = cwd
 			}
-			return initRepo(cmd.OutOrStdout(), opts.repoPath)
+
+			l, err := layout.New(opts.repoPath)
+			if err != nil {
+				return err
+			}
+
+			return initRepo(cmd.OutOrStdout(), l)
 		},
 	}
 }
 
-func initRepo(w io.Writer, repoPath string) error {
-	absTracPath, err := filepath.Abs(filepath.Join(repoPath, ".trac"))
-	if err != nil {
+func initRepo(w io.Writer, l *layout.Layout) error {
+	if l.Exists() {
+		fmt.Fprintf(w, "Reinitialized existing trac repository in %s\n", l.RootPath)
+		return nil
+	}
+
+	if err := l.Init(); err != nil {
 		return err
 	}
 
-	directories := []string{
-		filepath.Join(absTracPath, "objects"),
-		filepath.Join(absTracPath, "refs", "heads"),
-	}
-
-	if _, err := os.Stat(absTracPath); err != nil {
-		if os.IsNotExist(err) {
-			for _, dir := range directories {
-				if err := os.MkdirAll(dir, 0755); err != nil {
-					return fmt.Errorf("failed to create directory %s: %w", dir, err)
-				}
-			}
-
-			headPath := filepath.Join(absTracPath, "HEAD")
-			if err := os.WriteFile(headPath, []byte("ref: refs/heads/main\n"), 0644); err != nil {
-				return fmt.Errorf("failed to write HEAD file: %w", err)
-			}
-
-			mainBranchPath := filepath.Join(absTracPath, "refs", "heads", "main")
-			if err := os.WriteFile(mainBranchPath, []byte{}, 0644); err != nil {
-				return fmt.Errorf("failed to write main branch reference: %w", err)
-			}
-
-			fmt.Fprintf(w, "Initialized empty trac repository in %s\n", absTracPath)
-			return nil
-		}
-		return fmt.Errorf("failed to check for existing repository at %s: %w", absTracPath, err)
-	}
-
-	fmt.Fprintf(w, "Reinitialized existing trac repository in %s\n", absTracPath)
+	fmt.Fprintf(w, "Initialized empty trac repository in %s\n", l.RootPath)
 	return nil
 }

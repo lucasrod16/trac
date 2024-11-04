@@ -14,6 +14,9 @@ import (
 
 func TestStatusCommand(t *testing.T) {
 	t.Run("non-trac repository", func(t *testing.T) {
+		tmpdir := t.TempDir()
+		require.NoError(t, os.Chdir(tmpdir))
+
 		cmd := NewStatusCmd()
 		cmd.SetOut(io.Discard)
 		cmd.SetErr(io.Discard)
@@ -55,7 +58,7 @@ func TestStatusCommand(t *testing.T) {
 		trackedFilePath := filepath.Join(tmpdir, "test.txt")
 		require.NoError(t, os.WriteFile(trackedFilePath, []byte("tracked content"), 0644))
 
-		// simulate staging a file
+		// simulate staging a file by creating an object file in the .trac/objects directory
 		content, err := os.ReadFile(trackedFilePath)
 		require.NoError(t, err)
 		hash := fmt.Sprintf("%x", sha256.Sum256(content))
@@ -74,6 +77,7 @@ func TestStatusCommand(t *testing.T) {
 	})
 }
 
+// initRepository initializes a new trac repository for testing.
 func initRepository(t *testing.T) string {
 	t.Helper()
 

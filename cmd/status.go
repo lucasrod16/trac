@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/fatih/color"
+	"github.com/lucasrod16/trac/internal/layout"
 	"github.com/lucasrod16/trac/internal/status"
 	"github.com/spf13/cobra"
 )
@@ -16,17 +18,28 @@ func NewStatusCmd() *cobra.Command {
 		Long:  "Display the current status of the trac repository, listing untracked files if any.",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := validateIsRepo(); err != nil {
+			cwd, err := os.Getwd()
+			if err != nil {
 				return err
 			}
-			return showRepoStatus(cmd.OutOrStdout())
+
+			l, err := layout.New(cwd)
+			if err != nil {
+				return err
+			}
+
+			if err := l.ValidateIsRepo(); err != nil {
+				return err
+			}
+
+			return showRepoStatus(cmd.OutOrStdout(), l)
 		},
 	}
 }
 
 // showRepoStatus outputs the current status of the repository.
-func showRepoStatus(w io.Writer) error {
-	status := status.NewRepoStatus()
+func showRepoStatus(w io.Writer, l *layout.Layout) error {
+	status := status.NewRepoStatus(l)
 
 	if err := status.DetectTrackedStatus(); err != nil {
 		return err

@@ -27,3 +27,4 @@ go.work.sum
 .trac
 bin
 notes.md
+.vscode

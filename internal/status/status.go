@@ -5,33 +5,32 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
+
+	"github.com/lucasrod16/trac/internal/layout"
 )
 
 // repoStatus holds the state of the repository, including tracked and untracked files.
 type repoStatus struct {
+	layout    *layout.Layout
 	tracked   []string
 	untracked []string
 }
 
-func NewRepoStatus() *repoStatus {
+func NewRepoStatus(l *layout.Layout) *repoStatus {
 	return &repoStatus{
+		layout:    l,
 		tracked:   []string{},
 		untracked: []string{},
 	}
 }
 
-func (rs *repoStatus) addTracked(file string) {
-	if !slices.Contains(rs.tracked, file) {
-		rs.tracked = append(rs.tracked, file)
-	}
+func (rs *repoStatus) addTracked(path string) {
+	rs.tracked = append(rs.tracked, path)
 }
 
-func (rs *repoStatus) addUntracked(file string) {
-	if !slices.Contains(rs.untracked, file) {
-		rs.untracked = append(rs.untracked, file)
-	}
+func (rs *repoStatus) addUntracked(path string) {
+	rs.untracked = append(rs.untracked, path)
 }
 
 func (rs *repoStatus) GetTracked() []string {
@@ -50,6 +49,7 @@ func (rs *repoStatus) HasUntracked() bool {
 	return len(rs.untracked) > 0
 }
 
+// DetectTrackedStatus scans the current working directory for tracked and untracked files.
 func (rs *repoStatus) DetectTrackedStatus() error {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -62,13 +62,13 @@ func (rs *repoStatus) DetectTrackedStatus() error {
 		}
 
 		if info.IsDir() {
-			if strings.Contains(path, ".trac") || strings.Contains(path, ".git") {
+			if strings.Contains(path, rs.layout.RootPath) || strings.Contains(path, ".git") {
 				return filepath.SkipDir
 			}
 			return nil
 		}
 
-		isTracked, err := isFileTracked(cwd, path)
+		isTracked, err := rs.isFileTracked(path)
 		if err != nil {
 			return err
 		}
@@ -80,21 +80,15 @@ func (rs *repoStatus) DetectTrackedStatus() error {
 
 		if isTracked {
 			rs.addTracked(relPath)
-		}
-
-		if !isTracked {
+		} else {
 			rs.addUntracked(relPath)
 		}
-
 		return nil
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
-// getStagedFiles finds staged files in the repository.
+// GetStagedFiles finds staged files in the repository.
 func (rs *repoStatus) GetStagedFiles() error {
 	// TODO: implement logic to find staged files.
 	// Will require implementing staging with `trac add` first.
@@ -102,8 +96,8 @@ func (rs *repoStatus) GetStagedFiles() error {
 	return nil
 }
 
-// isFileTracked checks if a file's content hash exists in .trac/objects/.
-func isFileTracked(repoPath, filePath string) (bool, error) {
+// isFileTracked checks if a file's content hash exists in the .trac/objects directory.
+func (rs *repoStatus) isFileTracked(filePath string) (bool, error) {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return false, err
@@ -112,7 +106,7 @@ func isFileTracked(repoPath, filePath string) (bool, error) {
 	hash := sha256.Sum256(content)
 	hashString := fmt.Sprintf("%x", hash)
 
-	objectPath := filepath.Join(repoPath, ".trac", "objects", hashString[:2], hashString[2:])
+	objectPath := filepath.Join(rs.layout.ObjectsPath, hashString[:2], hashString[2:])
 	if _, err := os.Stat(objectPath); os.IsNotExist(err) {
 		return false, nil // file is untracked
 	}
