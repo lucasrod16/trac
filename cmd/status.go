@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/lucasrod16/trac/internal/layout"
@@ -55,17 +58,35 @@ func showRepoStatus(w io.Writer, l *layout.Layout) error {
 	}
 
 	if status.HasUntracked() {
+		uniquePaths := make(map[string]bool)
+		for _, fp := range status.GetUntracked() {
+			dir := filepath.Dir(fp)
+			if dir != "." {
+				parts := strings.Split(dir, string(filepath.Separator))
+				if len(parts) > 0 {
+					fp = parts[0] + string(filepath.Separator)
+				}
+			}
+			uniquePaths[fp] = true
+		}
+
+		sortedPaths := []string{}
+		for path := range uniquePaths {
+			sortedPaths = append(sortedPaths, path)
+		}
+		sort.Strings(sortedPaths)
+
 		fmt.Fprintln(w, "Untracked files:")
-		for _, file := range status.GetUntracked() {
+		for _, path := range sortedPaths {
 			untrackedColor := color.New(color.FgHiRed)
-			untrackedColor.Fprintf(w, "\t%s\n", file)
+			untrackedColor.Fprintf(w, "\t%s\n", path)
 		}
 	}
 
 	if status.HasTracked() {
 		fmt.Fprintln(w, "\nChanges to be committed:")
-		for _, file := range status.GetTracked() {
-			fmt.Fprintf(w, "\tnew file:   %s\n", file)
+		for _, filepath := range status.GetTracked() {
+			fmt.Fprintf(w, "\tnew file:   %s\n", filepath)
 		}
 	}
 
