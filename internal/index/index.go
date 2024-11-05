@@ -10,7 +10,7 @@ import (
 	"github.com/lucasrod16/trac/internal/utils"
 )
 
-// Index represents the entire Index of staged and unstaged files.
+// Index represents the index of staged files.
 type Index struct {
 	Staged map[string]string `json:"staged"`
 }
@@ -21,7 +21,7 @@ func New() *Index {
 	}
 }
 
-// Add adds an entry (file) to the Index by calculating its SHA-256 hash and storing it.
+// Add adds an entry (file) to the index by calculating its SHA-256 hash and storing it.
 func (idx *Index) Add(filePath string) error {
 	absPath, err := filepath.Abs(filePath)
 	if err != nil {
@@ -35,7 +35,7 @@ func (idx *Index) Add(filePath string) error {
 	return nil
 }
 
-// Write serializes the Index to a JSON file.
+// Write serializes the index to a JSON file.
 func (idx *Index) Write(l *layout.Layout) error {
 	file, err := os.OpenFile(l.Index, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -52,7 +52,7 @@ func (idx *Index) Write(l *layout.Layout) error {
 	return nil
 }
 
-// Load reads and deserializes the Index from a JSON file.
+// Load reads and deserializes the index from a JSON file.
 func (idx *Index) Load(l *layout.Layout) error {
 	file, err := os.Open(l.Index)
 	if err != nil {
