@@ -1,25 +1,27 @@
 package status
 
 import (
-	"crypto/sha256"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/lucasrod16/trac/internal/index"
 	"github.com/lucasrod16/trac/internal/layout"
+	"github.com/lucasrod16/trac/internal/utils"
 )
 
 // repoStatus holds the state of the repository, including tracked and untracked files.
 type repoStatus struct {
 	layout    *layout.Layout
+	index     *index.Index
 	tracked   []string
 	untracked []string
 }
 
-func NewRepoStatus(l *layout.Layout) *repoStatus {
+func NewRepoStatus(l *layout.Layout, idx *index.Index) *repoStatus {
 	return &repoStatus{
 		layout:    l,
+		index:     idx,
 		tracked:   []string{},
 		untracked: []string{},
 	}
@@ -62,13 +64,13 @@ func (rs *repoStatus) DetectTrackedStatus() error {
 		}
 
 		if info.IsDir() {
-			if strings.Contains(path, rs.layout.RootPath) || strings.Contains(path, ".git") {
+			if strings.Contains(path, rs.layout.Root) || strings.Contains(path, ".git") {
 				return filepath.SkipDir
 			}
 			return nil
 		}
 
-		isTracked, err := rs.isFileTracked(path)
+		isStaged, err := rs.isStaged(path)
 		if err != nil {
 			return err
 		}
@@ -78,7 +80,7 @@ func (rs *repoStatus) DetectTrackedStatus() error {
 			return err
 		}
 
-		if isTracked {
+		if isStaged {
 			rs.addTracked(relPath)
 		} else {
 			rs.addUntracked(relPath)
@@ -88,27 +90,13 @@ func (rs *repoStatus) DetectTrackedStatus() error {
 	return err
 }
 
-// GetStagedFiles finds staged files in the repository.
-func (rs *repoStatus) GetStagedFiles() error {
-	// TODO: implement logic to find staged files.
-	// Will require implementing staging with `trac add` first.
-	// Lookup from index file.
-	return nil
-}
-
-// isFileTracked checks if a file's content hash exists in the .trac/objects directory.
-func (rs *repoStatus) isFileTracked(filePath string) (bool, error) {
-	content, err := os.ReadFile(filePath)
+func (rs *repoStatus) isStaged(path string) (bool, error) {
+	hash, err := utils.HashFile(path)
 	if err != nil {
 		return false, err
 	}
-
-	hash := sha256.Sum256(content)
-	hashString := fmt.Sprintf("%x", hash)
-
-	objectPath := filepath.Join(rs.layout.ObjectsPath, hashString[:2], hashString[2:])
-	if _, err := os.Stat(objectPath); os.IsNotExist(err) {
-		return false, nil // file is untracked
+	if _, ok := rs.index.Staged[hash]; ok {
+		return true, nil
 	}
-	return true, nil // file is tracked
+	return false, nil
 }

@@ -16,12 +16,13 @@ func TestNew(t *testing.T) {
 	require.NotNil(t, actual)
 
 	expected := &Layout{
-		RootPath:      filepath.Join(tmpdir, ".trac"),
-		ObjectsPath:   filepath.Join(tmpdir, ".trac", "objects"),
-		RefsPath:      filepath.Join(tmpdir, ".trac", "refs"),
-		HeadsPath:     filepath.Join(tmpdir, ".trac", "refs", "heads"),
-		HeadFilePath:  filepath.Join(tmpdir, ".trac", "HEAD"),
+		Root:          filepath.Join(tmpdir, ".trac"),
+		Objects:       filepath.Join(tmpdir, ".trac", "objects"),
+		Refs:          filepath.Join(tmpdir, ".trac", "refs"),
+		Heads:         filepath.Join(tmpdir, ".trac", "refs", "heads"),
+		HeadFile:      filepath.Join(tmpdir, ".trac", "HEAD"),
 		MainBranchRef: filepath.Join(tmpdir, ".trac", "refs", "heads", "main"),
+		Index:         filepath.Join(tmpdir, ".trac", "index.json"),
 	}
 	require.Equal(t, expected, actual)
 }

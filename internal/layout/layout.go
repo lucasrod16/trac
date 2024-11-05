@@ -1,19 +1,22 @@
 package layout
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
 
 // Layout represents the filesystem structure of a trac repository.
 type Layout struct {
-	RootPath      string // Path to the .trac/ directory
-	ObjectsPath   string // Path to the objects/ directory
-	RefsPath      string // Path to the refs/ directory
-	HeadsPath     string // Path to the refs/heads/ directory
-	HeadFilePath  string // Path to the HEAD file
+	Root          string // Path to the .trac/ directory
+	Objects       string // Path to the objects/ directory
+	Refs          string // Path to the refs/ directory
+	Heads         string // Path to the refs/heads/ directory
+	HeadFile      string // Path to the HEAD file
 	MainBranchRef string // Path to the main branch reference file (refs/heads/main)
+	Index         string // Path to the index file (index.json)
 }
 
 // New creates a new Layout instance with paths initialized based on repoPath.
@@ -28,20 +31,21 @@ func New(repoPath string) (*Layout, error) {
 	}
 
 	return &Layout{
-		RootPath:      absPath,
-		ObjectsPath:   filepath.Join(absPath, "objects"),
-		RefsPath:      filepath.Join(absPath, "refs"),
-		HeadsPath:     filepath.Join(absPath, "refs", "heads"),
-		HeadFilePath:  filepath.Join(absPath, "HEAD"),
+		Root:          absPath,
+		Objects:       filepath.Join(absPath, "objects"),
+		Refs:          filepath.Join(absPath, "refs"),
+		Heads:         filepath.Join(absPath, "refs", "heads"),
+		HeadFile:      filepath.Join(absPath, "HEAD"),
 		MainBranchRef: filepath.Join(absPath, "refs", "heads", "main"),
+		Index:         filepath.Join(absPath, "index.json"),
 	}, nil
 }
 
 // Init initializes an empty repository by creating necessary folders and files.
 func (l *Layout) Init() error {
 	directories := []string{
-		l.ObjectsPath,
-		l.HeadsPath,
+		l.Objects,
+		l.Heads,
 	}
 
 	for _, dir := range directories {
@@ -50,7 +54,7 @@ func (l *Layout) Init() error {
 		}
 	}
 
-	if err := os.WriteFile(l.HeadFilePath, []byte("ref: refs/heads/main\n"), 0644); err != nil {
+	if err := os.WriteFile(l.HeadFile, []byte("ref: refs/heads/main\n"), 0644); err != nil {
 		return fmt.Errorf("failed to write HEAD file: %w", err)
 	}
 
@@ -63,8 +67,8 @@ func (l *Layout) Init() error {
 
 // Exists checks if the .trac directory already exists.
 func (l *Layout) Exists() bool {
-	_, err := os.Stat(l.RootPath)
-	return !os.IsNotExist(err)
+	_, err := os.Stat(l.Root)
+	return !errors.Is(err, fs.ErrNotExist)
 }
 
 func (l *Layout) ValidateIsRepo() error {

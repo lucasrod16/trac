@@ -1,14 +1,17 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/lucasrod16/trac/internal/index"
 	"github.com/lucasrod16/trac/internal/layout"
 	"github.com/lucasrod16/trac/internal/status"
 	"github.com/spf13/cobra"
@@ -42,13 +45,14 @@ func NewStatusCmd() *cobra.Command {
 
 // showRepoStatus outputs the current status of the repository.
 func showRepoStatus(w io.Writer, l *layout.Layout) error {
-	status := status.NewRepoStatus(l)
-
-	if err := status.DetectTrackedStatus(); err != nil {
+	idx := index.New()
+	err := idx.Load(l)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
 
-	if err := status.GetStagedFiles(); err != nil {
+	status := status.NewRepoStatus(l, idx)
+	if err := status.DetectTrackedStatus(); err != nil {
 		return err
 	}
 

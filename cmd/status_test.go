@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -54,17 +52,14 @@ func TestStatusCommand(t *testing.T) {
 	t.Run("tracked files", func(t *testing.T) {
 		tmpdir := initRepository(t)
 
-		repoPath := filepath.Join(tmpdir, ".trac")
 		trackedFilePath := filepath.Join(tmpdir, "test.txt")
 		require.NoError(t, os.WriteFile(trackedFilePath, []byte("tracked content"), 0644))
 
-		// simulate staging a file by creating an object file in the .trac/objects directory
-		content, err := os.ReadFile(trackedFilePath)
-		require.NoError(t, err)
-		hash := fmt.Sprintf("%x", sha256.Sum256(content))
-		objectPath := filepath.Join(repoPath, "objects", hash[:2], hash[2:])
-		require.NoError(t, os.MkdirAll(filepath.Dir(objectPath), 0755))
-		require.NoError(t, os.WriteFile(objectPath, content, 0644))
+		addCmd := NewAddCmd()
+		addCmd.SetArgs([]string{trackedFilePath})
+		addCmd.SetOut(io.Discard)
+		addCmd.SetErr(io.Discard)
+		require.NoError(t, addCmd.Execute())
 
 		cmd := NewStatusCmd()
 		var buf bytes.Buffer
