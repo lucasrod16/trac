@@ -1,6 +1,6 @@
 .PHONE: build
 build:
-	go build -o ./bin/trac
+	go build -ldflags="-s -w" -o ./bin/trac
 
 .PHONY: test
 test:
