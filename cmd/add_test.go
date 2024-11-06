@@ -39,9 +39,10 @@ func TestAddCommand(t *testing.T) {
 		idx := index.New()
 		require.NoError(t, idx.Load(l))
 
-		hash, err := utils.HashFile(testPath)
+		expected, err := utils.HashFile(testPath)
 		require.NoError(t, err)
-		require.Contains(t, idx.Staged, hash)
+		actual := idx.Staged[testPath]
+		require.Equal(t, expected, actual)
 	})
 
 	t.Run("add multiple files", func(t *testing.T) {
@@ -61,13 +62,15 @@ func TestAddCommand(t *testing.T) {
 		idx := index.New()
 		require.NoError(t, idx.Load(l))
 
-		hash1, err := utils.HashFile(testPath1)
+		expected, err := utils.HashFile(testPath1)
 		require.NoError(t, err)
-		hash2, err := utils.HashFile(testPath2)
-		require.NoError(t, err)
+		actual := idx.Staged[testPath1]
+		require.Equal(t, expected, actual)
 
-		require.Contains(t, idx.Staged, hash1)
-		require.Contains(t, idx.Staged, hash2)
+		expected, err = utils.HashFile(testPath2)
+		require.NoError(t, err)
+		actual = idx.Staged[testPath2]
+		require.Equal(t, expected, actual)
 	})
 
 	t.Run("add files recursively", func(t *testing.T) {
@@ -90,13 +93,15 @@ func TestAddCommand(t *testing.T) {
 		idx := index.New()
 		require.NoError(t, idx.Load(l))
 
-		hash1, err := utils.HashFile(testPath1)
+		expected, err := utils.HashFile(testPath1)
 		require.NoError(t, err)
-		hash2, err := utils.HashFile(testPath2)
-		require.NoError(t, err)
+		actual := idx.Staged[testPath1]
+		require.Equal(t, expected, actual)
 
-		require.Contains(t, idx.Staged, hash1)
-		require.Contains(t, idx.Staged, hash2)
+		expected, err = utils.HashFile(testPath2)
+		require.NoError(t, err)
+		actual = idx.Staged[testPath2]
+		require.Equal(t, expected, actual)
 	})
 
 	t.Run("invalid file path", func(t *testing.T) {

@@ -84,5 +84,8 @@ func initRepository(t *testing.T) string {
 	initCmd.SetErr(io.Discard)
 	require.NoError(t, initCmd.Execute())
 
+	tmpdir, err := filepath.EvalSymlinks(tmpdir)
+	require.NoError(t, err)
+
 	return tmpdir
 }

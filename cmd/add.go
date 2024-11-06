@@ -100,11 +100,7 @@ func stageFiles(l *layout.Layout, opts *addOptions) error {
 	}
 
 	for _, file := range opts.files {
-		absPath, err := filepath.Abs(file)
-		if err != nil {
-			return err
-		}
-		if err := idx.Add(absPath); err != nil {
+		if err := idx.Add(file); err != nil {
 			return fmt.Errorf("failed to add file %s: %w", file, err)
 		}
 	}

@@ -95,8 +95,10 @@ func (rs *repoStatus) isStaged(path string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if _, ok := rs.index.Staged[hash]; ok {
-		return true, nil
+	for _, existingHash := range rs.index.Staged {
+		if hash == existingHash {
+			return true, nil
+		}
 	}
 	return false, nil
 }

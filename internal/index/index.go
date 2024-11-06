@@ -31,7 +31,7 @@ func (idx *Index) Add(filePath string) error {
 	if err != nil {
 		return err
 	}
-	idx.Staged[hash] = filePath
+	idx.Staged[filePath] = hash
 	return nil
 }
 
