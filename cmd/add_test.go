@@ -93,6 +93,11 @@ func TestAddCommand(t *testing.T) {
 		idx := index.New()
 		require.NoError(t, idx.Load(l))
 
+		testPath1, err = filepath.Rel(tmpdir, testPath1)
+		require.NoError(t, err)
+		testPath2, err = filepath.Rel(tmpdir, testPath2)
+		require.NoError(t, err)
+
 		expected, err := utils.HashFile(testPath1)
 		require.NoError(t, err)
 		actual := idx.Staged[testPath1]

@@ -3,7 +3,6 @@ package status
 import (
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/lucasrod16/trac/internal/index"
 	"github.com/lucasrod16/trac/internal/layout"
@@ -64,7 +63,7 @@ func (rs *repoStatus) DetectTrackedStatus() error {
 		}
 
 		if info.IsDir() {
-			if strings.Contains(path, rs.layout.Root) || strings.Contains(path, ".git") {
+			if info.Name() == ".trac" || info.Name() == ".git" {
 				return filepath.SkipDir
 			}
 			return nil

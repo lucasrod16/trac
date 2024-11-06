@@ -6,7 +6,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/lucasrod16/trac/internal/index"
 	"github.com/lucasrod16/trac/internal/layout"
@@ -53,7 +52,7 @@ func NewAddCmd() *cobra.Command {
 			}
 
 			if args[0] == "." {
-				files, err := getFilesRecursively(cwd, l)
+				files, err := getFilesRecursively(cwd)
 				if err != nil {
 					return err
 				}
@@ -71,19 +70,23 @@ func NewAddCmd() *cobra.Command {
 	}
 }
 
-func getFilesRecursively(rootDir string, l *layout.Layout) ([]string, error) {
+func getFilesRecursively(rootDir string) ([]string, error) {
 	var files []string
 	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if info.IsDir() {
-			if strings.Contains(path, l.Root) || strings.Contains(path, ".git") {
+			if info.Name() == ".trac" || info.Name() == ".git" {
 				return filepath.SkipDir
 			}
 			return nil
 		}
-		files = append(files, path)
+		relPath, err := filepath.Rel(rootDir, path)
+		if err != nil {
+			return err
+		}
+		files = append(files, relPath)
 		return nil
 	})
 	if err != nil {
