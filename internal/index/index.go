@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/lucasrod16/trac/internal/layout"
 	"github.com/lucasrod16/trac/internal/utils"
@@ -23,11 +22,7 @@ func New() *Index {
 
 // Add adds an entry (file) to the index by calculating its SHA-256 hash and storing it.
 func (idx *Index) Add(filePath string) error {
-	absPath, err := filepath.Abs(filePath)
-	if err != nil {
-		return err
-	}
-	hash, err := utils.HashFile(absPath)
+	hash, err := utils.HashFile(filePath)
 	if err != nil {
 		return err
 	}
