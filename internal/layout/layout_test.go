@@ -16,7 +16,8 @@ func TestNew(t *testing.T) {
 	require.NotNil(t, actual)
 
 	expected := &Layout{
-		Root:          filepath.Join(tmpdir, ".trac"),
+		Root:          tmpdir,
+		Config:        filepath.Join(tmpdir, ".trac"),
 		Objects:       filepath.Join(tmpdir, ".trac", "objects"),
 		Refs:          filepath.Join(tmpdir, ".trac", "refs"),
 		Heads:         filepath.Join(tmpdir, ".trac", "refs", "heads"),

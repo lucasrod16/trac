@@ -21,7 +21,10 @@ func New() *Index {
 }
 
 // Add adds an entry (file) to the index by calculating its SHA-256 hash and storing it.
-func (idx *Index) Add(filePath string) error {
+func (idx *Index) Add(filePath string, l *layout.Layout) error {
+	if err := l.ValidatePathInRepo(filePath); err != nil {
+		return err
+	}
 	hash, err := utils.HashFile(filePath)
 	if err != nil {
 		return err

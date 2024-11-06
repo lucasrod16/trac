@@ -6,11 +6,13 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Layout represents the filesystem structure of a trac repository.
 type Layout struct {
-	Root          string // Path to the .trac/ directory
+	Root          string // Path to the root of the repository (the directory containing .trac)
+	Config        string // Path to the .trac/ directory (repository configuration)
 	Objects       string // Path to the objects/ directory
 	Refs          string // Path to the refs/ directory
 	Heads         string // Path to the refs/heads/ directory
@@ -25,19 +27,22 @@ func New(repoPath string) (*Layout, error) {
 		return nil, fmt.Errorf("repoPath argument must be provided")
 	}
 
-	absPath, err := filepath.Abs(filepath.Join(repoPath, ".trac"))
+	rootPath, err := filepath.Abs(repoPath)
 	if err != nil {
 		return nil, err
 	}
 
+	configPath := filepath.Join(rootPath, ".trac")
+
 	return &Layout{
-		Root:          absPath,
-		Objects:       filepath.Join(absPath, "objects"),
-		Refs:          filepath.Join(absPath, "refs"),
-		Heads:         filepath.Join(absPath, "refs", "heads"),
-		HeadFile:      filepath.Join(absPath, "HEAD"),
-		MainBranchRef: filepath.Join(absPath, "refs", "heads", "main"),
-		Index:         filepath.Join(absPath, "index.json"),
+		Root:          rootPath,
+		Config:        configPath,
+		Objects:       filepath.Join(configPath, "objects"),
+		Refs:          filepath.Join(configPath, "refs"),
+		Heads:         filepath.Join(configPath, "refs", "heads"),
+		HeadFile:      filepath.Join(configPath, "HEAD"),
+		MainBranchRef: filepath.Join(configPath, "refs", "heads", "main"),
+		Index:         filepath.Join(configPath, "index.json"),
 	}, nil
 }
 
@@ -67,13 +72,25 @@ func (l *Layout) Init() error {
 
 // Exists checks if the .trac directory already exists.
 func (l *Layout) Exists() bool {
-	_, err := os.Stat(l.Root)
+	_, err := os.Stat(l.Config)
 	return !errors.Is(err, fs.ErrNotExist)
 }
 
 func (l *Layout) ValidateIsRepo() error {
 	if !l.Exists() {
 		return fmt.Errorf("not a trac repository (or any of the parent directories): .trac")
+	}
+	return nil
+}
+
+// ValidatePathInRepo validates if a given path is within the repository root.
+func (l *Layout) ValidatePathInRepo(path string) error {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+	if !strings.HasPrefix(absPath, l.Root) {
+		return fmt.Errorf("%q is outside the repository at %q", absPath, l.Root)
 	}
 	return nil
 }

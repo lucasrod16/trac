@@ -45,7 +45,7 @@ func NewInitCmd() *cobra.Command {
 
 func initRepo(w io.Writer, l *layout.Layout) error {
 	if l.Exists() {
-		fmt.Fprintf(w, "Reinitialized existing trac repository in %s\n", l.Root)
+		fmt.Fprintf(w, "Reinitialized existing trac repository in %s\n", l.Config)
 		return nil
 	}
 
@@ -53,6 +53,6 @@ func initRepo(w io.Writer, l *layout.Layout) error {
 		return err
 	}
 
-	fmt.Fprintf(w, "Initialized empty trac repository in %s\n", l.Root)
+	fmt.Fprintf(w, "Initialized empty trac repository in %s\n", l.Config)
 	return nil
 }
