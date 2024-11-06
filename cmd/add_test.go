@@ -24,6 +24,20 @@ func TestAddCommand(t *testing.T) {
 		require.EqualError(t, cmd.Execute(), "not a trac repository (or any of the parent directories): .trac")
 	})
 
+	t.Run("add file outside repository should error", func(t *testing.T) {
+		tmpdir := initRepository(t)
+
+		outsidePath := filepath.Join(filepath.Dir(tmpdir), "test.txt")
+		require.NoError(t, os.WriteFile(outsidePath, []byte("content"), 0644))
+
+		cmd := NewAddCmd()
+		cmd.SetArgs([]string{outsidePath})
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		require.ErrorContains(t, cmd.Execute(), "failed to add file")
+		require.ErrorContains(t, cmd.Execute(), "outside the repository")
+	})
+
 	t.Run("add a single file", func(t *testing.T) {
 		tmpdir := initRepository(t)
 
