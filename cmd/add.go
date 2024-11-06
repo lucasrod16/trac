@@ -48,6 +48,10 @@ func NewAddCmd() *cobra.Command {
 				return err
 			}
 
+			if err := l.ValidateIsRepo(); err != nil {
+				return err
+			}
+
 			if args[0] == "." {
 				files, err := getFilesRecursively(cwd, l)
 				if err != nil {
@@ -56,10 +60,6 @@ func NewAddCmd() *cobra.Command {
 				opts.files = files
 			} else {
 				opts.files = args
-			}
-
-			if err := l.ValidateIsRepo(); err != nil {
-				return err
 			}
 
 			if err := stageFiles(l, opts); err != nil {
