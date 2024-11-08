@@ -85,7 +85,8 @@ func showRepoStatus(w io.Writer, l *layout.Layout) error {
 	if status.HasTracked() {
 		fmt.Fprintln(w, "\nChanges to be committed:")
 		for _, filepath := range status.GetTracked() {
-			fmt.Fprintf(w, "\tnew file:   %s\n", filepath)
+			trackedColor := color.New(color.FgHiGreen)
+			trackedColor.Fprintf(w, "\tnew file:   %s\n", filepath)
 		}
 	}
 
