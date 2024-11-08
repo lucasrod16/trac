@@ -2,7 +2,6 @@ package index
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/lucasrod16/trac/internal/layout"
@@ -37,16 +36,15 @@ func (idx *Index) Add(filePath string, l *layout.Layout) error {
 func (idx *Index) Write(l *layout.Layout) error {
 	file, err := os.OpenFile(l.Index, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to create or open Index file: %w", err)
+		return err
 	}
 	defer file.Close()
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(idx); err != nil {
-		return fmt.Errorf("failed to write Index to file: %w", err)
+		return err
 	}
-
 	return nil
 }
 
@@ -54,14 +52,13 @@ func (idx *Index) Write(l *layout.Layout) error {
 func (idx *Index) Load(l *layout.Layout) error {
 	file, err := os.Open(l.Index)
 	if err != nil {
-		return fmt.Errorf("failed to open Index file: %w", err)
+		return err
 	}
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(idx); err != nil {
-		return fmt.Errorf("failed to read Index from file: %w", err)
+		return err
 	}
-
 	return nil
 }

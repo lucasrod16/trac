@@ -32,12 +32,10 @@ func NewInitCmd() *cobra.Command {
 				}
 				opts.repoPath = cwd
 			}
-
 			l, err := layout.New(opts.repoPath)
 			if err != nil {
 				return err
 			}
-
 			return initRepo(cmd.OutOrStdout(), l)
 		},
 	}
@@ -48,11 +46,9 @@ func initRepo(w io.Writer, l *layout.Layout) error {
 		fmt.Fprintf(w, "Reinitialized existing trac repository in %s\n", l.Config)
 		return nil
 	}
-
 	if err := l.Init(); err != nil {
 		return err
 	}
-
 	fmt.Fprintf(w, "Initialized empty trac repository in %s\n", l.Config)
 	return nil
 }

@@ -29,16 +29,13 @@ func NewStatusCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			l, err := layout.New(cwd)
 			if err != nil {
 				return err
 			}
-
 			if err := l.ValidateIsRepo(); err != nil {
 				return err
 			}
-
 			return showRepoStatus(cmd.OutOrStdout(), l)
 		},
 	}
@@ -51,17 +48,14 @@ func showRepoStatus(w io.Writer, l *layout.Layout) error {
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
-
 	status := status.NewRepoStatus(l, idx)
 	if err := status.DetectTrackedStatus(); err != nil {
 		return err
 	}
-
 	if !status.HasTracked() && !status.HasUntracked() {
 		fmt.Fprintln(w, "nothing to commit (create/copy files and use \"trac add\" to track)")
 		return nil
 	}
-
 	if status.HasUntracked() {
 		untracked := []string{}
 		for _, fp := range status.GetUntracked() {
@@ -81,7 +75,6 @@ func showRepoStatus(w io.Writer, l *layout.Layout) error {
 			untrackedColor.Fprintf(w, "\t%s\n", path)
 		}
 	}
-
 	if status.HasTracked() {
 		fmt.Fprintln(w, "\nChanges to be committed:")
 		for _, filepath := range status.GetTracked() {
@@ -89,6 +82,5 @@ func showRepoStatus(w io.Writer, l *layout.Layout) error {
 			trackedColor.Fprintf(w, "\tnew file:   %s\n", filepath)
 		}
 	}
-
 	return nil
 }

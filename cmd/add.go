@@ -41,18 +41,22 @@ func NewAddCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			l, err := layout.New(cwd)
 			if err != nil {
 				return err
 			}
-
 			if err := l.ValidateIsRepo(); err != nil {
 				return err
 			}
-
 			if args[0] == "." {
 				files, err := getFilesRecursively(cwd)
+				if err != nil {
+					return err
+				}
+				opts.files = files
+			} else if info, err := os.Stat(args[0]); err == nil && info.IsDir() {
+				root := filepath.Join(cwd, info.Name())
+				files, err := getFilesRecursively(root)
 				if err != nil {
 					return err
 				}
@@ -60,19 +64,17 @@ func NewAddCmd() *cobra.Command {
 			} else {
 				opts.files = args
 			}
-
 			if err := stageFiles(l, opts); err != nil {
 				return err
 			}
-
 			return nil
 		},
 	}
 }
 
-func getFilesRecursively(rootDir string) ([]string, error) {
+func getFilesRecursively(root string) ([]string, error) {
 	var files []string
-	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -82,7 +84,11 @@ func getFilesRecursively(rootDir string) ([]string, error) {
 			}
 			return nil
 		}
-		relPath, err := filepath.Rel(rootDir, path)
+		cwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		relPath, err := filepath.Rel(cwd, path)
 		if err != nil {
 			return err
 		}
@@ -101,16 +107,13 @@ func stageFiles(l *layout.Layout, opts *addOptions) error {
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
-
 	for _, file := range opts.files {
 		if err := idx.Add(file, l); err != nil {
 			return fmt.Errorf("failed to add file %s: %w", file, err)
 		}
 	}
-
 	if err := idx.Write(l); err != nil {
 		return fmt.Errorf("failed to write updated index: %w", err)
 	}
-
 	return nil
 }

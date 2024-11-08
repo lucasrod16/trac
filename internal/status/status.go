@@ -56,29 +56,24 @@ func (rs *repoStatus) DetectTrackedStatus() error {
 	if err != nil {
 		return err
 	}
-
 	err = filepath.Walk(cwd, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-
 		if info.IsDir() {
 			if info.Name() == ".trac" || info.Name() == ".git" {
 				return filepath.SkipDir
 			}
 			return nil
 		}
-
 		isStaged, err := rs.isStaged(path)
 		if err != nil {
 			return err
 		}
-
 		relPath, err := filepath.Rel(cwd, path)
 		if err != nil {
 			return err
 		}
-
 		if isStaged {
 			rs.addTracked(relPath)
 		} else {

@@ -24,16 +24,13 @@ type Layout struct {
 // New creates a new Layout instance with paths initialized based on repoPath.
 func New(repoPath string) (*Layout, error) {
 	if repoPath == "" {
-		return nil, fmt.Errorf("repoPath argument must be provided")
+		return nil, errors.New("repoPath argument must be provided")
 	}
-
 	rootPath, err := filepath.Abs(repoPath)
 	if err != nil {
 		return nil, err
 	}
-
 	configPath := filepath.Join(rootPath, ".trac")
-
 	return &Layout{
 		Root:          rootPath,
 		Config:        configPath,
@@ -52,21 +49,17 @@ func (l *Layout) Init() error {
 		l.Objects,
 		l.Heads,
 	}
-
 	for _, dir := range directories {
 		if err := os.MkdirAll(dir, 0755); err != nil {
-			return fmt.Errorf("failed to create directory %s: %w", dir, err)
+			return err
 		}
 	}
-
 	if err := os.WriteFile(l.HeadFile, []byte("ref: refs/heads/main\n"), 0644); err != nil {
-		return fmt.Errorf("failed to write HEAD file: %w", err)
+		return err
 	}
-
 	if err := os.WriteFile(l.MainBranchRef, []byte{}, 0644); err != nil {
-		return fmt.Errorf("failed to write main branch reference: %w", err)
+		return err
 	}
-
 	return nil
 }
 
@@ -78,7 +71,7 @@ func (l *Layout) Exists() bool {
 
 func (l *Layout) ValidateIsRepo() error {
 	if !l.Exists() {
-		return fmt.Errorf("not a trac repository (or any of the parent directories): .trac")
+		return errors.New("not a trac repository (or any of the parent directories): .trac")
 	}
 	return nil
 }

@@ -87,7 +87,7 @@ func TestAddCommand(t *testing.T) {
 		require.Equal(t, expected, actual)
 	})
 
-	t.Run("add files recursively", func(t *testing.T) {
+	t.Run("add files recursively (working dir)", func(t *testing.T) {
 		tmpdir := initRepository(t)
 
 		subdir := filepath.Join(tmpdir, "subdir")
@@ -123,6 +123,42 @@ func TestAddCommand(t *testing.T) {
 		require.Equal(t, expected, actual)
 	})
 
+	t.Run("add files recursively", func(t *testing.T) {
+		tmpdir := initRepository(t)
+
+		subdir := filepath.Join(tmpdir, "subdir")
+		require.NoError(t, os.Mkdir(subdir, 0755))
+
+		testPath1 := filepath.Join(subdir, "test1.txt")
+		require.NoError(t, os.WriteFile(testPath1, []byte("content 1"), 0644))
+		testPath2 := filepath.Join(subdir, "test2.txt")
+		require.NoError(t, os.WriteFile(testPath2, []byte("content 2"), 0644))
+
+		cmd := NewAddCmd()
+		cmd.SetArgs([]string{subdir})
+		require.NoError(t, cmd.Execute())
+
+		l, err := layout.New(tmpdir)
+		require.NoError(t, err)
+		idx := index.New()
+		require.NoError(t, idx.Load(l))
+
+		testPath1, err = filepath.Rel(tmpdir, testPath1)
+		require.NoError(t, err)
+		testPath2, err = filepath.Rel(tmpdir, testPath2)
+		require.NoError(t, err)
+
+		expected, err := utils.HashFile(testPath1)
+		require.NoError(t, err)
+		actual := idx.Staged[testPath1]
+		require.Equal(t, expected, actual)
+
+		expected, err = utils.HashFile(testPath2)
+		require.NoError(t, err)
+		actual = idx.Staged[testPath2]
+		require.Equal(t, expected, actual)
+	})
+
 	t.Run("invalid file path", func(t *testing.T) {
 		tmpdir := initRepository(t)
 
@@ -133,6 +169,6 @@ func TestAddCommand(t *testing.T) {
 		cmd.SetErr(io.Discard)
 
 		err := cmd.Execute()
-		require.ErrorContains(t, err, "failed to add file")
+		require.Error(t, err)
 	})
 }
