@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -62,26 +63,20 @@ func showRepoStatus(w io.Writer, l *layout.Layout) error {
 	}
 
 	if status.HasUntracked() {
-		uniquePaths := make(map[string]bool)
+		untracked := []string{}
 		for _, fp := range status.GetUntracked() {
-			dir := filepath.Dir(fp)
-			if dir != "." {
-				parts := strings.Split(dir, string(filepath.Separator))
-				if len(parts) > 0 {
-					fp = parts[0] + string(filepath.Separator)
-				}
+			parts := strings.Split(fp, string(filepath.Separator))
+			root := parts[0]
+			if len(parts) > 1 {
+				root += string(filepath.Separator)
 			}
-			uniquePaths[fp] = true
+			if !slices.Contains(untracked, root) {
+				untracked = append(untracked, root)
+			}
 		}
-
-		sortedPaths := []string{}
-		for path := range uniquePaths {
-			sortedPaths = append(sortedPaths, path)
-		}
-		sort.Strings(sortedPaths)
-
+		sort.Strings(untracked)
 		fmt.Fprintln(w, "Untracked files:")
-		for _, path := range sortedPaths {
+		for _, path := range untracked {
 			untrackedColor := color.New(color.FgHiRed)
 			untrackedColor.Fprintf(w, "\t%s\n", path)
 		}
