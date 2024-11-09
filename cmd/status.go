@@ -48,17 +48,17 @@ func showRepoStatus(w io.Writer, l *layout.Layout) error {
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
-	status := status.NewRepoStatus(l, idx)
-	if err := status.DetectTrackedStatus(); err != nil {
+	repoStatus, err := status.Get(idx)
+	if err != nil {
 		return err
 	}
-	if !status.HasTracked() && !status.HasUntracked() {
+	if !repoStatus.HasTracked() && !repoStatus.HasUntracked() {
 		fmt.Fprintln(w, "nothing to commit (create/copy files and use \"trac add\" to track)")
 		return nil
 	}
-	if status.HasUntracked() {
+	if repoStatus.HasUntracked() {
 		untracked := []string{}
-		for _, fp := range status.GetUntracked() {
+		for _, fp := range repoStatus.Untracked() {
 			parts := strings.Split(fp, string(filepath.Separator))
 			root := parts[0]
 			if len(parts) > 1 {
@@ -75,9 +75,9 @@ func showRepoStatus(w io.Writer, l *layout.Layout) error {
 			untrackedColor.Fprintf(w, "\t%s\n", path)
 		}
 	}
-	if status.HasTracked() {
+	if repoStatus.HasTracked() {
 		fmt.Fprintln(w, "\nChanges to be committed:")
-		for _, filepath := range status.GetTracked() {
+		for _, filepath := range repoStatus.Tracked() {
 			trackedColor := color.New(color.FgHiGreen)
 			trackedColor.Fprintf(w, "\tnew file:   %s\n", filepath)
 		}

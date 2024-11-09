@@ -5,21 +5,18 @@ import (
 	"path/filepath"
 
 	"github.com/lucasrod16/trac/internal/index"
-	"github.com/lucasrod16/trac/internal/layout"
 	"github.com/lucasrod16/trac/internal/utils"
 )
 
 // repoStatus holds the state of the repository, including tracked and untracked files.
 type repoStatus struct {
-	layout    *layout.Layout
 	index     *index.Index
 	tracked   []string
 	untracked []string
 }
 
-func NewRepoStatus(l *layout.Layout, idx *index.Index) *repoStatus {
+func newRepoStatus(idx *index.Index) *repoStatus {
 	return &repoStatus{
-		layout:    l,
 		index:     idx,
 		tracked:   []string{},
 		untracked: []string{},
@@ -34,11 +31,11 @@ func (rs *repoStatus) addUntracked(path string) {
 	rs.untracked = append(rs.untracked, path)
 }
 
-func (rs *repoStatus) GetTracked() []string {
+func (rs *repoStatus) Tracked() []string {
 	return rs.tracked
 }
 
-func (rs *repoStatus) GetUntracked() []string {
+func (rs *repoStatus) Untracked() []string {
 	return rs.untracked
 }
 
@@ -50,11 +47,11 @@ func (rs *repoStatus) HasUntracked() bool {
 	return len(rs.untracked) > 0
 }
 
-// DetectTrackedStatus scans the current working directory for tracked and untracked files.
-func (rs *repoStatus) DetectTrackedStatus() error {
+func Get(idx *index.Index) (*repoStatus, error) {
+	rs := newRepoStatus(idx)
 	cwd, err := os.Getwd()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = filepath.Walk(cwd, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -81,7 +78,10 @@ func (rs *repoStatus) DetectTrackedStatus() error {
 		}
 		return nil
 	})
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return rs, nil
 }
 
 func (rs *repoStatus) isStaged(path string) (bool, error) {
