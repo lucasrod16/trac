@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/fatih/color"
@@ -55,11 +56,17 @@ func showRepoStatus(w io.Writer, l *layout.Layout) error {
 		return nil
 	}
 	if repoStatus.HasUntracked() {
-		fmt.Fprintln(w, "Untracked files:")
+		var untracked []string
 		for _, path := range repoStatus.Untracked() {
-			untracked := preparePath(path)
-			untrackedColor := color.New(color.FgHiRed)
-			untrackedColor.Fprintf(w, "\t%s\n", untracked)
+			path = preparePath(path)
+			if !slices.Contains(untracked, path) {
+				untracked = append(untracked, path)
+			}
+		}
+		fmt.Fprintln(w, "Untracked files:")
+		untrackedColor := color.New(color.FgHiRed)
+		for _, path := range untracked {
+			untrackedColor.Fprintf(w, "\t%s\n", path)
 		}
 	}
 	if repoStatus.HasTracked() {
