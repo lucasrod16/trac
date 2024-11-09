@@ -1,6 +1,7 @@
 package status
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -48,6 +49,9 @@ func (rs *repoStatus) HasUntracked() bool {
 }
 
 func Get(idx *index.Index) (*repoStatus, error) {
+	if idx == nil {
+		return nil, errors.New("index must not be nil")
+	}
 	rs := newRepoStatus(idx)
 	cwd, err := os.Getwd()
 	if err != nil {
