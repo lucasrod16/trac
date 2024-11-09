@@ -22,7 +22,8 @@ func TestStatusCommand(t *testing.T) {
 	})
 
 	t.Run("empty repository", func(t *testing.T) {
-		_ = initRepository(t)
+		tmpdir := initRepository(t)
+		require.NoError(t, os.Chdir(tmpdir))
 
 		cmd := NewStatusCmd()
 		var buf bytes.Buffer
@@ -35,6 +36,7 @@ func TestStatusCommand(t *testing.T) {
 
 	t.Run("untracked files", func(t *testing.T) {
 		tmpdir := initRepository(t)
+		require.NoError(t, os.Chdir(tmpdir))
 
 		untrackedFilePath := filepath.Join(tmpdir, "test.txt")
 		require.NoError(t, os.WriteFile(untrackedFilePath, []byte("some content"), 0644))
@@ -51,6 +53,7 @@ func TestStatusCommand(t *testing.T) {
 
 	t.Run("tracked files", func(t *testing.T) {
 		tmpdir := initRepository(t)
+		require.NoError(t, os.Chdir(tmpdir))
 
 		trackedFilePath := filepath.Join(tmpdir, "test.txt")
 		require.NoError(t, os.WriteFile(trackedFilePath, []byte("tracked content"), 0644))
@@ -77,15 +80,14 @@ func initRepository(t *testing.T) string {
 	t.Helper()
 
 	tmpdir := t.TempDir()
-	require.NoError(t, os.Chdir(tmpdir))
+	tmpdir, err := filepath.EvalSymlinks(tmpdir)
+	require.NoError(t, err)
 
 	initCmd := NewInitCmd()
 	initCmd.SetOut(io.Discard)
 	initCmd.SetErr(io.Discard)
+	initCmd.SetArgs([]string{tmpdir})
 	require.NoError(t, initCmd.Execute())
-
-	tmpdir, err := filepath.EvalSymlinks(tmpdir)
-	require.NoError(t, err)
 
 	return tmpdir
 }

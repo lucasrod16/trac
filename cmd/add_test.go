@@ -26,6 +26,7 @@ func TestAddCommand(t *testing.T) {
 
 	t.Run("add file outside repository should error", func(t *testing.T) {
 		tmpdir := initRepository(t)
+		require.NoError(t, os.Chdir(tmpdir))
 
 		outsidePath := filepath.Join(filepath.Dir(tmpdir), "test.txt")
 		require.NoError(t, os.WriteFile(outsidePath, []byte("content"), 0644))
@@ -40,6 +41,7 @@ func TestAddCommand(t *testing.T) {
 
 	t.Run("add a single file", func(t *testing.T) {
 		tmpdir := initRepository(t)
+		require.NoError(t, os.Chdir(tmpdir))
 
 		testPath := filepath.Join(tmpdir, "test.txt")
 		require.NoError(t, os.WriteFile(testPath, []byte("some content"), 0644))
@@ -61,6 +63,7 @@ func TestAddCommand(t *testing.T) {
 
 	t.Run("add multiple files", func(t *testing.T) {
 		tmpdir := initRepository(t)
+		require.NoError(t, os.Chdir(tmpdir))
 
 		testPath1 := filepath.Join(tmpdir, "test1.txt")
 		require.NoError(t, os.WriteFile(testPath1, []byte("content 1"), 0644))
@@ -89,6 +92,7 @@ func TestAddCommand(t *testing.T) {
 
 	t.Run("add files recursively (working dir)", func(t *testing.T) {
 		tmpdir := initRepository(t)
+		require.NoError(t, os.Chdir(tmpdir))
 
 		subdir := filepath.Join(tmpdir, "subdir")
 		require.NoError(t, os.Mkdir(subdir, 0755))
@@ -125,6 +129,7 @@ func TestAddCommand(t *testing.T) {
 
 	t.Run("add files recursively", func(t *testing.T) {
 		tmpdir := initRepository(t)
+		require.NoError(t, os.Chdir(tmpdir))
 
 		subdir := filepath.Join(tmpdir, "subdir")
 		require.NoError(t, os.Mkdir(subdir, 0755))
@@ -161,6 +166,7 @@ func TestAddCommand(t *testing.T) {
 
 	t.Run("invalid file path", func(t *testing.T) {
 		tmpdir := initRepository(t)
+		require.NoError(t, os.Chdir(tmpdir))
 
 		invalidFilePath := filepath.Join(tmpdir, "invalid.txt")
 		cmd := NewAddCmd()
