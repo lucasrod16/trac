@@ -1,13 +1,10 @@
 package cmd
 
 import (
-	"io"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/lucasrod16/trac/internal/index"
-	"github.com/lucasrod16/trac/internal/layout"
 	"github.com/lucasrod16/trac/internal/utils"
 	"github.com/stretchr/testify/require"
 )
@@ -16,12 +13,7 @@ func TestAddCommand(t *testing.T) {
 	t.Run("non-trac repository", func(t *testing.T) {
 		tmpdir := t.TempDir()
 		require.NoError(t, os.Chdir(tmpdir))
-
-		cmd := NewAddCmd()
-		cmd.SetArgs([]string{"."})
-		cmd.SetOut(io.Discard)
-		cmd.SetErr(io.Discard)
-		require.EqualError(t, cmd.Execute(), "not a trac repository (or any of the parent directories): .trac")
+		require.EqualError(t, addCmd(t, "."), "not a trac repository (or any of the parent directories): .trac")
 	})
 
 	t.Run("add file outside repository should error", func(t *testing.T) {
@@ -31,12 +23,9 @@ func TestAddCommand(t *testing.T) {
 		outsidePath := filepath.Join(filepath.Dir(tmpdir), "test.txt")
 		require.NoError(t, os.WriteFile(outsidePath, []byte("content"), 0644))
 
-		cmd := NewAddCmd()
-		cmd.SetArgs([]string{outsidePath})
-		cmd.SetOut(io.Discard)
-		cmd.SetErr(io.Discard)
-		require.ErrorContains(t, cmd.Execute(), "failed to add file")
-		require.ErrorContains(t, cmd.Execute(), "outside the repository")
+		err := addCmd(t, outsidePath)
+		require.ErrorContains(t, err, "failed to add file")
+		require.ErrorContains(t, err, "outside the repository")
 	})
 
 	t.Run("add a single file", func(t *testing.T) {
@@ -45,15 +34,9 @@ func TestAddCommand(t *testing.T) {
 
 		testPath := filepath.Join(tmpdir, "test.txt")
 		require.NoError(t, os.WriteFile(testPath, []byte("some content"), 0644))
+		require.NoError(t, addCmd(t, testPath))
 
-		cmd := NewAddCmd()
-		cmd.SetArgs([]string{testPath})
-		require.NoError(t, cmd.Execute())
-
-		l, err := layout.New(tmpdir)
-		require.NoError(t, err)
-		idx := index.New()
-		require.NoError(t, idx.Load(l))
+		idx := getIndex(t, tmpdir)
 
 		expected, err := utils.HashFile(testPath)
 		require.NoError(t, err)
@@ -70,14 +53,9 @@ func TestAddCommand(t *testing.T) {
 		testPath2 := filepath.Join(tmpdir, "test2.txt")
 		require.NoError(t, os.WriteFile(testPath2, []byte("content 2"), 0644))
 
-		cmd := NewAddCmd()
-		cmd.SetArgs([]string{testPath1, testPath2})
-		require.NoError(t, cmd.Execute())
+		require.NoError(t, addCmd(t, testPath1, testPath2))
 
-		l, err := layout.New(tmpdir)
-		require.NoError(t, err)
-		idx := index.New()
-		require.NoError(t, idx.Load(l))
+		idx := getIndex(t, tmpdir)
 
 		expected, err := utils.HashFile(testPath1)
 		require.NoError(t, err)
@@ -102,16 +80,11 @@ func TestAddCommand(t *testing.T) {
 		testPath2 := filepath.Join(subdir, "test2.txt")
 		require.NoError(t, os.WriteFile(testPath2, []byte("content 2"), 0644))
 
-		cmd := NewAddCmd()
-		cmd.SetArgs([]string{"."})
-		require.NoError(t, cmd.Execute())
+		require.NoError(t, addCmd(t, "."))
 
-		l, err := layout.New(tmpdir)
-		require.NoError(t, err)
-		idx := index.New()
-		require.NoError(t, idx.Load(l))
+		idx := getIndex(t, tmpdir)
 
-		testPath1, err = filepath.Rel(tmpdir, testPath1)
+		testPath1, err := filepath.Rel(tmpdir, testPath1)
 		require.NoError(t, err)
 		testPath2, err = filepath.Rel(tmpdir, testPath2)
 		require.NoError(t, err)
@@ -139,16 +112,11 @@ func TestAddCommand(t *testing.T) {
 		testPath2 := filepath.Join(subdir, "test2.txt")
 		require.NoError(t, os.WriteFile(testPath2, []byte("content 2"), 0644))
 
-		cmd := NewAddCmd()
-		cmd.SetArgs([]string{subdir})
-		require.NoError(t, cmd.Execute())
+		require.NoError(t, addCmd(t, subdir))
 
-		l, err := layout.New(tmpdir)
-		require.NoError(t, err)
-		idx := index.New()
-		require.NoError(t, idx.Load(l))
+		idx := getIndex(t, tmpdir)
 
-		testPath1, err = filepath.Rel(tmpdir, testPath1)
+		testPath1, err := filepath.Rel(tmpdir, testPath1)
 		require.NoError(t, err)
 		testPath2, err = filepath.Rel(tmpdir, testPath2)
 		require.NoError(t, err)
@@ -167,14 +135,7 @@ func TestAddCommand(t *testing.T) {
 	t.Run("invalid file path", func(t *testing.T) {
 		tmpdir := initRepository(t)
 		require.NoError(t, os.Chdir(tmpdir))
-
 		invalidFilePath := filepath.Join(tmpdir, "invalid.txt")
-		cmd := NewAddCmd()
-		cmd.SetArgs([]string{invalidFilePath})
-		cmd.SetOut(io.Discard)
-		cmd.SetErr(io.Discard)
-
-		err := cmd.Execute()
-		require.Error(t, err)
+		require.Error(t, addCmd(t, invalidFilePath))
 	})
 }

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -14,12 +13,8 @@ func TestCommitCommand(t *testing.T) {
 	t.Run("non-trac repository", func(t *testing.T) {
 		tmpdir := t.TempDir()
 		require.NoError(t, os.Chdir(tmpdir))
-
-		cmd := NewCommitCmd()
-		cmd.SetArgs([]string{"-m", "test commit message"})
-		cmd.SetOut(io.Discard)
-		cmd.SetErr(io.Discard)
-		require.EqualError(t, cmd.Execute(), "not a trac repository (or any of the parent directories): .trac")
+		err := commitCmd(t, "-m", "test commit message")
+		require.EqualError(t, err, "not a trac repository (or any of the parent directories): .trac")
 	})
 
 	t.Run("verify commit writes to object database", func(t *testing.T) {
@@ -28,18 +23,9 @@ func TestCommitCommand(t *testing.T) {
 
 		testFile := filepath.Join(tmpdir, "test.txt")
 		require.NoError(t, os.WriteFile(testFile, []byte("content"), 0644))
+		require.NoError(t, addCmd(t, testFile))
 
-		addCmd := NewAddCmd()
-		addCmd.SetArgs([]string{testFile})
-		addCmd.SetOut(io.Discard)
-		addCmd.SetErr(io.Discard)
-		require.NoError(t, addCmd.Execute())
-
-		commitCmd := NewCommitCmd()
-		commitCmd.SetArgs([]string{"-m", "test commit message"})
-		commitCmd.SetOut(io.Discard)
-		commitCmd.SetErr(io.Discard)
-		require.NoError(t, commitCmd.Execute())
+		require.NoError(t, commitCmd(t, "-m", "test commit message"))
 
 		hash, err := utils.HashFile(testFile)
 		require.NoError(t, err)
