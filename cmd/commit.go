@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 
 	"github.com/lucasrod16/trac/internal/commit"
@@ -49,6 +51,9 @@ func runCommit(w io.Writer, opts *commitOptions) error {
 	}
 	idx := index.New()
 	if err := idx.Load(layout); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return commit.ErrNothingAddedToCommit
+		}
 		return err
 	}
 	parentHash, err := commit.LoadParent(layout)

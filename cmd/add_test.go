@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/lucasrod16/trac/internal/layout"
 	"github.com/lucasrod16/trac/internal/utils"
 	"github.com/stretchr/testify/require"
 )
@@ -13,7 +14,7 @@ func TestAddCommand(t *testing.T) {
 	t.Run("non-trac repository", func(t *testing.T) {
 		tmpdir := t.TempDir()
 		require.NoError(t, os.Chdir(tmpdir))
-		require.EqualError(t, addCmd(t, "."), "not a trac repository (or any of the parent directories): .trac")
+		require.EqualError(t, addCmd(t, "."), layout.ErrNotTracRepository.Error())
 	})
 
 	t.Run("add file outside repository should error", func(t *testing.T) {

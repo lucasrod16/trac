@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/lucasrod16/trac/internal/layout"
@@ -33,11 +34,18 @@ func New(message, parent string, stagedFiles map[string]string) *Commit {
 
 // Save writes the commit object to the repository and updates the main branch reference.
 func (c *Commit) Save(l *layout.Layout) (string, error) {
+	changed, err := c.workingTreeChanged(l)
+	if err != nil {
+		return "", err
+	}
+	if !changed {
+		return "", ErrWorkingTreeClean
+	}
+
 	commitData, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return "", err
 	}
-
 	hash := sha256.Sum256(commitData)
 	commitHash := hex.EncodeToString(hash[:])
 
@@ -58,6 +66,42 @@ func (c *Commit) Save(l *layout.Layout) (string, error) {
 		}
 	}
 	return commitHash, nil
+}
+
+func (c *Commit) workingTreeChanged(l *layout.Layout) (changed bool, err error) {
+	parentCommit, err := loadCommit(c.Parent, l)
+	if err != nil && !errors.Is(err, ErrEmptyCommitHash) {
+		return false, err
+	}
+	if parentCommit == nil {
+		return true, nil
+	}
+	if len(c.Changes) != len(parentCommit.Changes) {
+		return true, nil
+	}
+	for path, hash := range c.Changes {
+		if parentHash, ok := parentCommit.Changes[path]; !ok || parentHash != hash {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// loadCommit loads a commit object from the object database.
+func loadCommit(commitHash string, l *layout.Layout) (*Commit, error) {
+	if commitHash == "" {
+		return nil, ErrEmptyCommitHash
+	}
+	commitPath := filepath.Join(l.Objects, commitHash[:2], commitHash[2:])
+	data, err := os.ReadFile(commitPath)
+	if err != nil {
+		return nil, err
+	}
+	var commit Commit
+	if err := json.Unmarshal(data, &commit); err != nil {
+		return nil, err
+	}
+	return &commit, nil
 }
 
 func copyFileObject(contentHash string, src string, l *layout.Layout) error {
@@ -93,5 +137,5 @@ func LoadParent(l *layout.Layout) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(data), nil
+	return strings.TrimSpace(string(data)), nil
 }

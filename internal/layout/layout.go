@@ -61,7 +61,7 @@ func (l *Layout) Exists() bool {
 
 func (l *Layout) ValidateIsRepo() error {
 	if !l.Exists() {
-		return errors.New("not a trac repository (or any of the parent directories): .trac")
+		return ErrNotTracRepository
 	}
 	return nil
 }

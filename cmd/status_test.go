@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/lucasrod16/trac/internal/layout"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +14,7 @@ func TestStatusCommand(t *testing.T) {
 		tmpdir := t.TempDir()
 		require.NoError(t, os.Chdir(tmpdir))
 		_, err := statusCmd(t)
-		require.EqualError(t, err, "not a trac repository (or any of the parent directories): .trac")
+		require.EqualError(t, err, layout.ErrNotTracRepository.Error())
 	})
 
 	t.Run("empty repository", func(t *testing.T) {
