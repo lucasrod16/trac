@@ -56,7 +56,7 @@ func runCommit(w io.Writer, opts *commitOptions) error {
 		}
 		return err
 	}
-	parentHash, err := commit.LoadParent(layout)
+	parentHash, err := commit.GetParentHash(layout)
 	if err != nil {
 		return err
 	}

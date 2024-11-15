@@ -131,8 +131,8 @@ func copyFileObject(contentHash string, src string, l *layout.Layout) error {
 	return nil
 }
 
-// LoadParent loads the hash of the latest commit from HEAD.
-func LoadParent(l *layout.Layout) (string, error) {
+// GetParentHash gets the hash of the latest commit from HEAD.
+func GetParentHash(l *layout.Layout) (string, error) {
 	data, err := os.ReadFile(l.HeadFile)
 	if err != nil {
 		return "", err
