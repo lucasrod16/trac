@@ -30,5 +30,8 @@ func TestCommitCommand(t *testing.T) {
 		hash, err := utils.HashFile(testFile)
 		require.NoError(t, err)
 		require.FileExists(t, filepath.Join(".trac", "objects", hash[:2], hash[2:]))
+		latestCommit, err := os.ReadFile(filepath.Join(".trac", "HEAD"))
+		require.NoError(t, err)
+		require.NotEmpty(t, latestCommit)
 	})
 }

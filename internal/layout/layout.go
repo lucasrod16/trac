@@ -11,14 +11,11 @@ import (
 
 // Layout represents the filesystem structure of a trac repository.
 type Layout struct {
-	Root          string // Path to the root of the repository (the directory containing .trac)
-	Config        string // Path to the .trac/ directory (repository configuration)
-	Objects       string // Path to the objects/ directory
-	Refs          string // Path to the refs/ directory
-	Heads         string // Path to the refs/heads/ directory
-	HeadFile      string // Path to the HEAD file
-	MainBranchRef string // Path to the main branch reference file (refs/heads/main)
-	Index         string // Path to the index file (index.json)
+	Root     string // Path to the root of the repository (the directory containing .trac)
+	Config   string // Path to the .trac/ directory (repository configuration)
+	Objects  string // Path to the objects/ directory
+	HeadFile string // Path to the HEAD file
+	Index    string // Path to the index file (index.json)
 }
 
 // New creates a new Layout instance with paths initialized based on repoPath.
@@ -32,14 +29,11 @@ func New(repoPath string) (*Layout, error) {
 	}
 	configPath := filepath.Join(rootPath, ".trac")
 	return &Layout{
-		Root:          rootPath,
-		Config:        configPath,
-		Objects:       filepath.Join(configPath, "objects"),
-		Refs:          filepath.Join(configPath, "refs"),
-		Heads:         filepath.Join(configPath, "refs", "heads"),
-		HeadFile:      filepath.Join(configPath, "HEAD"),
-		MainBranchRef: filepath.Join(configPath, "refs", "heads", "main"),
-		Index:         filepath.Join(configPath, "index.json"),
+		Root:     rootPath,
+		Config:   configPath,
+		Objects:  filepath.Join(configPath, "objects"),
+		HeadFile: filepath.Join(configPath, "HEAD"),
+		Index:    filepath.Join(configPath, "index.json"),
 	}, nil
 }
 
@@ -47,17 +41,13 @@ func New(repoPath string) (*Layout, error) {
 func (l *Layout) Init() error {
 	directories := []string{
 		l.Objects,
-		l.Heads,
 	}
 	for _, dir := range directories {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			return err
 		}
 	}
-	if err := os.WriteFile(l.HeadFile, []byte("ref: refs/heads/main\n"), 0644); err != nil {
-		return err
-	}
-	if err := os.WriteFile(l.MainBranchRef, []byte{}, 0644); err != nil {
+	if err := os.WriteFile(l.HeadFile, []byte(""), 0644); err != nil {
 		return err
 	}
 	return nil

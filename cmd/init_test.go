@@ -23,14 +23,12 @@ func TestInitCommand(t *testing.T) {
 
 	expectedDirs := []string{
 		filepath.Join(repoPath, "objects"),
-		filepath.Join(repoPath, "refs", "heads"),
 	}
 	for _, dir := range expectedDirs {
 		require.DirExists(t, dir)
 	}
 
 	require.FileExists(t, filepath.Join(repoPath, "HEAD"))
-	require.FileExists(t, filepath.Join(repoPath, "refs", "heads", "main"))
 	require.Equal(t, fmt.Sprintf("Initialized empty trac repository in %s\n", repoPath), buf.String())
 
 	// verify re-init
