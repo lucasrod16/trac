@@ -32,7 +32,7 @@ func New(message, parent string, stagedFiles map[string]string) *Commit {
 	}
 }
 
-// Save writes the commit object to the repository and updates the main branch reference.
+// Save writes the commit object to the repository and updates HEAD.
 func (c *Commit) Save(l *layout.Layout) (string, error) {
 	changed, err := c.workingTreeChanged(l)
 	if err != nil {
