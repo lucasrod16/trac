@@ -73,7 +73,7 @@ func (c *Commit) workingTreeChanged(l *layout.Layout) (changed bool, err error) 
 	if err != nil && !errors.Is(err, ErrEmptyCommitHash) {
 		return false, err
 	}
-	if parentCommit == nil {
+	if parentCommit == nil && errors.Is(err, ErrEmptyCommitHash) {
 		return true, nil
 	}
 	if len(c.Changes) != len(parentCommit.Changes) {
