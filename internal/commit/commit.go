@@ -49,7 +49,7 @@ func (c *Commit) Save(l *layout.Layout) (string, error) {
 	if err := os.WriteFile(commitPath, commitData, 0644); err != nil {
 		return "", err
 	}
-	if err := os.WriteFile(l.HeadFile, []byte(commitHash), 0644); err != nil {
+	if err := os.WriteFile(l.HeadFile, []byte(commitHash+"\n"), 0644); err != nil {
 		return "", err
 	}
 	for filePath, contentHash := range c.Changes {
